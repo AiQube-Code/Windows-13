@@ -1,0 +1,320 @@
+<html w-tid="0"><head w-tid="1"><style>html{min-height:100%}.ctxmenu{position:fixed;border:1px solid #999;padding:2px 0;box-shadow:#aaa 3px 3px 3px;background:#fff;margin:0;z-index:9999;overflow-y:auto;font:15px Verdana, sans-serif;box-sizing:border-box}.ctxmenu li{margin:1px 0;display:block;position:relative;user-select:none}.ctxmenu li.heading{font-weight:bold;margin-left:-5px}.ctxmenu li span{display:block;padding:2px 20px;cursor:default}.ctxmenu li a{color:inherit;text-decoration:none}.ctxmenu li.icon{padding-left:15px}.ctxmenu img.icon{position:absolute;width:18px;left:10px;top:2px}.ctxmenu li.disabled{color:#ccc}.ctxmenu li.divider{border-bottom:1px solid #aaa;margin:5px 0}.ctxmenu li.interactive:hover{background:rgba(0, 0, 0, .1)}.ctxmenu li.submenu::after{content:"";position:absolute;display:block;top:0;bottom:0;right:.4em;margin:auto .1rem auto auto;border-right:1px solid #000;border-top:1px solid #000;transform:rotate(45deg);width:.3rem;height:.3rem}.ctxmenu li.submenu.disabled::after{border-color:#ccc}</style><base href="" w-tid="2">
+<link rel="stylesheet" href="/fonts.css?v=undefined">
+<link rel="stylesheet" href="/ctxmenu.css?v=undefined">
+
+
+<title w-tid="3">Windows 13 Red Edition - File Explorer</title><style w-tid="4">
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    overflow: hidden;
+  }
+  .desktop {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #FF4136, #85144b);
+    position: relative;
+  }
+  .dock {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-top-left-radius: 20px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+  }
+  .dock-icon {
+    width: 50px;
+    height: 50px;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    color: #FF4136;
+  }
+  .dock-icon:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.9);
+  }
+  .time {
+    color: white;
+    margin-top: 20px;
+    font-size: 18px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+  .window {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    width: 800px;
+    height: 600px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    display: none;
+    overflow: hidden;
+  }
+  .window-header {
+    background: rgba(255, 65, 54, 0.8);
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    cursor: move;
+  }
+  .window-controls {
+    display: flex;
+    gap: 10px;
+  }
+  .window-button {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .minimize {
+    background-color: #FFDC00;
+  }
+  .maximize {
+    background-color: #2ECC40;
+  }
+  .close {
+    background-color: #FF4136;
+  }
+  .window-content {
+    display: flex;
+    height: calc(100% - 50px);
+  }
+  .sidebar {
+    width: 200px;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 10px;
+  }
+  .sidebar-item {
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .sidebar-item:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  .main-content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow: auto;
+  }
+  .folder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 20px;
+  }
+  .folder-item {
+    text-align: center;
+    cursor: pointer;
+  }
+  .folder-icon {
+    font-size: 48px;
+  }
+  .folder-name {
+    font-size: 14px;
+    word-wrap: break-word;
+  }
+</style></head><body w-tid="5">
+  <div class="desktop" id="desktop" w-tid="6">
+    <div class="dock" w-tid="7">
+      <div class="dock-icon" onclick="openWindow('Documents')" w-tid="8" style="transform: scale(1);">📁</div>
+      <div class="dock-icon" onclick="openWindow('Pictures')" w-tid="9" style="transform: scale(1);">🖼️</div>
+      <div class="dock-icon" onclick="openWindow('Music')" w-tid="10" style="transform: scale(1);">🎵</div>
+      <div class="dock-icon" onclick="openWindow('Downloads')" w-tid="11" style="transform: scale(1);">⬇️</div>
+      <div class="time" id="clock" w-tid="12">06:56 PM</div>
+    </div>
+  </div>
+
+  <script w-tid="13">
+    let windowCount = 0;
+    const desktop = document.getElementById('desktop');
+
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      document.getElementById('clock').textContent = time;
+    }
+
+    function createWindow(folderName) {
+      const windowId = `window-${windowCount++}`;
+      const window = document.createElement('div');
+      window.className = 'window';
+      window.id = windowId;
+      window.style.zIndex = 1000 + windowCount;
+
+      window.innerHTML = `
+        <div class="window-header">
+          <span>📁 ${folderName}</span>
+          <div class="window-controls">
+            <div class="window-button minimize" onclick="minimizeWindow('${windowId}')"></div>
+            <div class="window-button maximize" onclick="maximizeWindow('${windowId}')"></div>
+            <div class="window-button close" onclick="closeWindow('${windowId}')"></div>
+          </div>
+        </div>
+        <div class="window-content">
+          <div class="sidebar">
+            <div class="sidebar-item" onclick="updateContent('${windowId}', 'Documents')">📁 Documents</div>
+            <div class="sidebar-item" onclick="updateContent('${windowId}', 'Pictures')">🖼️ Pictures</div>
+            <div class="sidebar-item" onclick="updateContent('${windowId}', 'Music')">🎵 Music</div>
+            <div class="sidebar-item" onclick="updateContent('${windowId}', 'Downloads')">⬇️ Downloads</div>
+          </div>
+          <div class="main-content" id="content-${windowId}">
+          </div>
+        </div>
+      `;
+
+      desktop.appendChild(window);
+      updateContent(windowId, folderName);
+      return window;
+    }
+
+    function openWindow(folderName) {
+      const window = createWindow(folderName);
+      window.style.display = 'block';
+      makeDraggable(window);
+    }
+
+    function closeWindow(windowId) {
+      const window = document.getElementById(windowId);
+      window.remove();
+    }
+
+    function minimizeWindow(windowId) {
+      const window = document.getElementById(windowId);
+      window.style.display = 'none';
+    }
+
+    function maximizeWindow(windowId) {
+      const window = document.getElementById(windowId);
+      if (window.style.width === '100%') {
+        window.style.width = '800px';
+        window.style.height = '600px';
+        window.style.top = '50px';
+        window.style.left = '50px';
+        window.style.borderRadius = '20px';
+      } else {
+        window.style.width = '100%';
+        window.style.height = '100%';
+        window.style.top = '0';
+        window.style.left = '0';
+        window.style.borderRadius = '0';
+      }
+    }
+
+    function updateContent(windowId, folderName) {
+      const content = document.getElementById(`content-${windowId}`);
+      content.innerHTML = `
+        <h2>${folderName}</h2>
+        <div class="folder-grid">
+          ${generateFolderItems(folderName)}
+        </div>
+      `;
+    }
+
+    function generateFolderItems(folderName) {
+      const items = {
+        'Documents': ['Report.docx', 'Presentation.pptx', 'Spreadsheet.xlsx', 'Notes.txt'],
+        'Pictures': ['Vacation.jpg', 'Family.png', 'Party.gif', 'Nature.bmp'],
+        'Music': ['Song1.mp3', 'Album.flac', 'Playlist.m3u', 'Podcast.ogg'],
+        'Downloads': ['Setup.exe', 'Movie.mkv', 'Ebook.pdf', 'Archive.zip']
+      };
+
+      return items[folderName].map(item => `
+        <div class="folder-item">
+          <div class="folder-icon">${getItemIcon(item)}</div>
+          <div class="folder-name">${item}</div>
+        </div>
+      `).join('');
+    }
+
+    function getItemIcon(item) {
+      const extension = item.split('.').pop().toLowerCase();
+      const icons = {
+        'docx': '📄', 'pptx': '📊', 'xlsx': '📈', 'txt': '📝',
+        'jpg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'bmp': '🖼️',
+        'mp3': '🎵', 'flac': '🎵', 'm3u': '🎵', 'ogg': '🎵',
+        'exe': '⚙️', 'mkv': '🎬', 'pdf': '📕', 'zip': '🗜️'
+      };
+      return icons[extension] || '📄';
+    }
+
+    function makeDraggable(element) {
+      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      element.querySelector('.window-header').onmousedown = dragMouseDown;
+
+      function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+        element.style.zIndex = 1000 + ++windowCount;
+      }
+
+      function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        element.style.top = (element.offsetTop - pos2) + "px";
+        element.style.left = (element.offsetLeft - pos1) + "px";
+      }
+
+      function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+      }
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Add hover effect to dock
+    const dock = document.querySelector('.dock');
+    dock.addEventListener('mousemove', (e) => {
+      const icons = document.querySelectorAll('.dock-icon');
+      const dockRect = dock.getBoundingClientRect();
+      const mouseY = e.clientY - dockRect.top;
+      
+      icons.forEach((icon, index) => {
+        const iconRect = icon.getBoundingClientRect();
+        const iconCenter = iconRect.top + iconRect.height / 2 - dockRect.top;
+        const distance = Math.abs(mouseY - iconCenter);
+        const scale = Math.max(1, 1.5 - distance / 100);
+        
+        icon.style.transform = `scale(${scale})`;
+      });
+    });
+
+    dock.addEventListener('mouseleave', () => {
+      const icons = document.querySelectorAll('.dock-icon');
+      icons.forEach(icon => {
+        icon.style.transform = 'scale(1)';
+      });
+    });
+  </script>
+</body></html>
